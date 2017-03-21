@@ -3,15 +3,13 @@ package cat.xtec.ioc.objects;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
-public class    Scrollable extends Actor {
+public class Scrollable extends Actor {
 
     protected Vector2 position;
     protected float velocity;
     protected float width;
     protected float height;
     protected boolean leftOfScreen;
-    protected int score = 0;
-    ScrollHandler scroller = new ScrollHandler();
 
     public Scrollable(float x, float y, float width, float height, float velocity) {
         position = new Vector2(x, y);
@@ -39,10 +37,6 @@ public class    Scrollable extends Actor {
         leftOfScreen = false;
     }
 
-    public void setLeftOfScreen(boolean leftOfScreen) {
-        this.leftOfScreen = leftOfScreen;
-    }
-
     public boolean isLeftOfScreen() {
         return leftOfScreen;
     }
@@ -67,11 +61,5 @@ public class    Scrollable extends Actor {
         return height;
     }
 
-    public int getScore() {
-        return score;
-    }
 
-    public void addScore(int incremento) {
-        score += incremento;
-    }
 }

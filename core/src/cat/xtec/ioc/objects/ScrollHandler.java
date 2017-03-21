@@ -2,7 +2,6 @@ package cat.xtec.ioc.objects;
 
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -24,12 +23,13 @@ public class ScrollHandler extends Group {
 
     // Asteroides
     int numAsteroids;
-    static private ArrayList<Asteroid> asteroids;
+    private ArrayList<Asteroid> asteroids;
 
     // Objecte Random
     Random r;
 
     public ScrollHandler() {
+
         // Creem els dos fons
         bg = new Background(0, 0, Settings.GAME_WIDTH * 2, Settings.GAME_HEIGHT, Settings.BG_SPEED);
         bg_back = new Background(bg.getTailX(), 0, Settings.GAME_WIDTH * 2, Settings.GAME_HEIGHT, Settings.BG_SPEED);
@@ -51,7 +51,7 @@ public class ScrollHandler extends Group {
         float newSize = Methods.randomFloat(Settings.MIN_ASTEROID, Settings.MAX_ASTEROID) * 34;
 
         // Afegim el primer Asteroid a l'Array i al grup
-        Asteroid asteroid = new Asteroid(Settings.GAME_WIDTH, r.nextInt(Settings.GAME_HEIGHT - (int) newSize), newSize, newSize, Settings.ASTEROID_SPEED, -50 + r.nextInt(100));
+        Asteroid asteroid = new Asteroid(Settings.GAME_WIDTH, r.nextInt(Settings.GAME_HEIGHT - (int) newSize), newSize, newSize, Settings.ASTEROID_SPEED, -50 + r.nextInt(100), true);
         asteroids.add(asteroid);
         addActor(asteroid);
 
@@ -60,7 +60,7 @@ public class ScrollHandler extends Group {
             // Creem la mida al·leatòria
             newSize = Methods.randomFloat(Settings.MIN_ASTEROID, Settings.MAX_ASTEROID) * 34;
             // Afegim l'asteroid.
-            asteroid = new Asteroid((int) (asteroids.get(asteroids.size() - 1).getTailX() + Settings.ASTEROID_GAP), r.nextInt(Settings.GAME_HEIGHT - (int) newSize), newSize, newSize, Settings.ASTEROID_SPEED, -50 + r.nextInt(100));
+            asteroid = new Asteroid(asteroids.get(asteroids.size() - 1).getTailX() + Settings.ASTEROID_GAP, r.nextInt(Settings.GAME_HEIGHT - (int) newSize), newSize, newSize, Settings.ASTEROID_SPEED, -50 + r.nextInt(100), true);
             // Afegim l'asteroide a l'ArrayList
             asteroids.add(asteroid);
             // Afegim l'asteroide al grup d'actors
@@ -94,7 +94,16 @@ public class ScrollHandler extends Group {
         }
     }
 
+    public boolean collides(Spacecraft nau) {
 
+        // Comprovem les col·lisions entre cada asteroid i la nau
+        for (Asteroid asteroid : asteroids) {
+            if (asteroid.collides(nau) && asteroid.isContact()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 
     public void reset() {
@@ -219,7 +228,6 @@ public class ScrollHandler extends Group {
             velocityY = 0;
             direction = SPACECRAFT_STRAIGHT;
         }
-
         // Obtenim el TextureRegion depenent de la posició de la spacecraft
         public TextureRegion getSpacecraftTexture() {
 
@@ -245,8 +253,6 @@ public class ScrollHandler extends Group {
             collisionRect = new Rectangle();
         }
 
-
-
         @Override
         public void draw(Batch batch, float parentAlpha) {
             super.draw(batch, parentAlpha);
@@ -256,15 +262,15 @@ public class ScrollHandler extends Group {
         public Rectangle getCollisionRect() {
             return collisionRect;
         }
-    }
-    public boolean collides(Spacecraft nau) {
 
-        // Comprovem les col·lisions entre cada asteroid i la nau
-        for (Asteroid asteroid : asteroids) {
-            if (asteroid.collides(nau)) {
-                return true;
+        public void shoot(ScrollHandler scrollHandler) {
+            for (Actor actor : stage.getActors()) {
+                if(actor.getName() != null && actor.getName().equalsIgnoreCase("spacecraft")){
+                    stage.addActor(new Disparo(actor.getX()+actor.getWidth(), actor.getY()+actor.getHeight()/2, 22, 20, scrollHandler));
+//                    AssetManager.disparo.play();
+                    break;
+                }
             }
         }
-        return false;
     }
 }

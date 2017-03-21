@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -35,7 +36,11 @@ public class GameScreen implements Screen {
     private Stage stage = new Stage();
     private ScrollHandler.Spacecraft spacecraft;
    // private Background bg;
-    private ScrollHandler scrollHandler = new ScrollHandler();
+    private ScrollHandler scrollHandler;
+
+    public GameScreen() {
+
+    }
 
     public enum GameState {
 
@@ -47,7 +52,7 @@ public class GameScreen implements Screen {
 
     // Encarregats de dibuixar elements per pantalla
     private ShapeRenderer shapeRenderer;
-    private Batch batch;
+    private Batch batch = stage.getBatch();
 
     private GlyphLayout marcador;
     // Per controlar l'animació de l'explosió
@@ -56,59 +61,68 @@ public class GameScreen implements Screen {
     // Preparem el textLayout per escriure text
     private GlyphLayout textLayout;
 
-    public GameScreen() {
-
+    public GameScreen(Batch batch, Viewport viewport, String dificil) {
+        batch = stage.getBatch();
         // Iniciem la música
         AssetManager.music.play();
+        if (dificil.equals("facil")) {
+            Settings.ASTEROID_GAP += 10;
+            Settings.SPACECRAFT_VELOCITY = 100;
+            Settings.ASTEROID_SPEED += 90;
+        } else if (dificil.equals("medio")) {
+            Settings.ASTEROID_SPEED -= 50;
+            Settings.SPACECRAFT_VELOCITY += 10;
+            Settings.ASTEROID_GAP -= 20;
+        } else if (dificil.equals("dificil")) {
+            Settings.ASTEROID_GAP -= 50;
+            Settings.ASTEROID_SPEED -= 40;
+        }
+            scrollHandler = new ScrollHandler();
+            shapeRenderer = new ShapeRenderer();
 
-        // Creem el ShapeRenderer
-        shapeRenderer = new ShapeRenderer();
+            OrthographicCamera camera = new OrthographicCamera(Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
+            camera.setToOrtho(true);
 
-        // Creem la càmera de les dimensions del joc
-        OrthographicCamera camera = new OrthographicCamera(Settings.GAME_WIDTH, Settings.GAME_HEIGHT);
-        // Posant el paràmetre a true configurem la càmera per a
-        // que faci servir el sistema de coordenades Y-Down
-        camera.setToOrtho(true);
+            // Creem el viewport amb les mateixes dimensions que la càmera
+            StretchViewport viewp = new StretchViewport(Settings.GAME_WIDTH, Settings.GAME_HEIGHT, camera);
 
-        // Creem el viewport amb les mateixes dimensions que la càmera
-        StretchViewport viewport = new StretchViewport(Settings.GAME_WIDTH, Settings.GAME_HEIGHT, camera);
+            // Creem l'stage i assginem el viewp
+            stage = new Stage(viewp);
 
-        // Creem l'stage i assginem el viewport
-        stage = new Stage(viewport);
+            batch = stage.getBatch();
 
-        batch = stage.getBatch();
+            // Creem la nau i la resta d'objectes
+            spacecraft = new ScrollHandler.Spacecraft(Settings.SPACECRAFT_STARTX, Settings.SPACECRAFT_STARTY, Settings.SPACECRAFT_WIDTH, Settings.SPACECRAFT_HEIGHT, stage);
+            // bg = new Background(0, 0, Settings.GAME_WIDTH * 2, Settings.GAME_HEIGHT, 0);
 
-        // Creem la nau i la resta d'objectes
-        spacecraft = new ScrollHandler.Spacecraft(Settings.SPACECRAFT_STARTX, Settings.SPACECRAFT_STARTY, Settings.SPACECRAFT_WIDTH, Settings.SPACECRAFT_HEIGHT,stage);
-       // bg = new Background(0, 0, Settings.GAME_WIDTH * 2, Settings.GAME_HEIGHT, 0);
+            // Afegim els actors a l'stage
+            stage.addActor(scrollHandler);
 
-        // Afegim els actors a l'stage
-        stage.addActor(scrollHandler);
+            // stage.addActor(bg);
+            stage.addActor(spacecraft);
 
-       // stage.addActor(bg);
-        stage.addActor(spacecraft);
-
-        // Donem nom a l'Actor
-        spacecraft.setName("spacecraft");
-
-
-        marcador = new GlyphLayout();
-        puntuacion = 0;
-        estado = GameState.READY;
-
-
-        // Assignem com a gestor d'entrada la classe InputHandler
-        Gdx.input.setInputProcessor(new InputHandler(this));
-
+            // Donem nom a l'Actor
+            spacecraft.setName("spacecraft");
 
 
-        // Iniciem el GlyphLayout
-       textLayout = new GlyphLayout();
-       textLayout.setText(AssetManager.font, "GameOver");
+            marcador = new GlyphLayout();
+            puntuacion = 0;
+            estado = GameState.READY;
 
 
-        // Assignem com a gestor d'entrada la classe InputHandler
-        Gdx.input.setInputProcessor(new InputHandler(this));
+            // Assignem com a gestor d'entrada la classe InputHandler
+            Gdx.input.setInputProcessor(new InputHandler(this));
+
+
+            // Iniciem el GlyphLayout
+            textLayout = new GlyphLayout();
+            textLayout.setText(AssetManager.font, "GameOver");
+
+
+            // Assignem com a gestor d'entrada la classe InputHandler
+            Gdx.input.setInputProcessor(new InputHandler(this));
+
+
 
     }
     private void drawElements() {
@@ -128,6 +142,7 @@ public class GameScreen implements Screen {
 
         // Pintem la nau
         shapeRenderer.rect(spacecraft.getX(), spacecraft.getY(), spacecraft.getWidth(), spacecraft.getHeight());
+
 
         // Recollim tots els Asteroid
         ArrayList<Asteroid> asteroids = scrollHandler.getAsteroids();
@@ -166,6 +181,21 @@ public class GameScreen implements Screen {
 
         // Dibuixem i actualizem tots els actors de l'stage
         stage.draw();
+
+        switch (estado) {
+
+            case GAMEOVER:
+//                updateGameOver(delta);
+//                break;
+            case RUNNING:
+                updateRunning(delta);
+                break;
+            case READY:
+//                updateReady();
+//                break;
+
+        }
+
         stage.act(delta);
 
         if (!gameOver) {
@@ -184,13 +214,14 @@ public class GameScreen implements Screen {
             // Convert integer into String
 
         }
+        updateRunning(delta);
     }
 
         private void updateRunning(float delta) {
             stage.act(delta);
             batch.begin();
             marcador.setText(AssetManager.font, "Puntuacion : " + puntuacion++);
-            AssetManager.fontPuntuacio.draw(batch, marcador, Settings.GAME_WIDTH-80, 2);
+            AssetManager.fontPuntuacio.draw(batch, marcador, 1, 2);
 
             if (scrollHandler.collides(spacecraft)) {
                 // Si hi ha hagut col·lisió: Reproduïm l'explosió i posem l'estat a GameOver

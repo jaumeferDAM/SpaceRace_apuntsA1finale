@@ -17,56 +17,50 @@ public class Asteroid extends Scrollable {
     private Circle collisionCircle;
 
     Random r;
-    private Scrollable scrollable;
 
     int assetAsteroid;
+    float velocitiY;
+    boolean contact;
 
-    public Asteroid(float x, float y, float width, float height, float velocity) {
+    public Asteroid(float x, float y, float width, float height, float velocity, float velocitiY, boolean contact) {
         super(x, y, width, height, velocity);
-
+        this.velocitiY = velocitiY;
         // Creem el cercle
         collisionCircle = new Circle();
-
+        this.contact = contact;
         /* Accions */
         r = new Random();
         assetAsteroid = r.nextInt(15);
 
         setOrigin();
 
-        //Rotacio
-
+        // Rotacio
         RotateByAction rotateAction = new RotateByAction();
         rotateAction.setAmount(-90f);
-        rotateAction.setDuration(0.8f);
+        rotateAction.setDuration(0.2f);
 
         // Accio de repetició
         RepeatAction repeat = new RepeatAction();
         repeat.setAction(rotateAction);
         repeat.setCount(RepeatAction.FOREVER);
 
-
         // Equivalent:
         // this.addAction(Actions.repeat(RepeatAction.FOREVER, Actions.rotateBy(-90f, 0.2f)));
 
         this.addAction(repeat);
 
-
-    }
-
-    public Asteroid(int gameWidth, int i, float newSize, float newSize1, int asteroidSpeed, int i1) {
-            super(gameWidth, i, newSize, newSize1, asteroidSpeed);
     }
 
     public void setOrigin() {
 
-        this.setOrigin(width / 2 + 1, height / 2);
+        this.setOrigin(width/2 + 1, height/2);
 
     }
 
     @Override
     public void act(float delta) {
         super.act(delta);
-
+        position.y += velocitiY*delta;
         // Actualitzem el cercle de col·lisions (punt central de l'asteroid i el radi.
         collisionCircle.set(position.x + width / 2.0f, position.y + width / 2.0f, width / 2.0f);
 
@@ -81,9 +75,11 @@ public class Asteroid extends Scrollable {
         // Modificarem l'alçada i l'amplada segons l'al·leatori anterior
         width = height = 34 * newSize;
         // La posició serà un valor aleatòri entre 0 i l'alçada de l'aplicació menys l'alçada
-        position.y = new Random().nextInt(Settings.GAME_HEIGHT - (int) height);
-
+        position.y =  new Random().nextInt(Settings.GAME_HEIGHT - (int) height);
+        this.setVisible(true);
+        this.setContact(true);
         assetAsteroid = r.nextInt(15);
+        this.velocitiY = -50 + r.nextInt(100);
         setOrigin();
     }
 
@@ -91,7 +87,6 @@ public class Asteroid extends Scrollable {
     @Override
     public void draw(Batch batch, float parentAlpha) {
         super.draw(batch, parentAlpha);
-        batch.draw(AssetManager.asteroid[assetAsteroid], position.x, position.y, width, height);
         batch.draw(AssetManager.asteroid[assetAsteroid], position.x, position.y, this.getOriginX(), this.getOriginY(), width, height, this.getScaleX(), this.getScaleY(), this.getRotation());
     }
 
@@ -100,20 +95,21 @@ public class Asteroid extends Scrollable {
 
         if (position.x <= nau.getX() + nau.getWidth()) {
             // Comprovem si han col·lisionat sempre i quan l'asteroid estigui a la mateixa alçada que la spacecraft
-
             return (Intersector.overlaps(collisionCircle, nau.getCollisionRect()));
         }
         return false;
     }
 
-    public void AsteroideLlegoAlFinal() {
-        if(position.x <= Settings.GAME_WIDTH) {
-            addScore(1);
-            scrollable.setLeftOfScreen(true);
-        }
 
+    public boolean isContact() {
+        return contact;
     }
+
+    public void setContact(boolean contact) {
+        this.contact = contact;
+    }
+
     public void addScore(int increment) {
-        scrollable.addScore(increment);
+//        scrollable.addScore(increment);
     }
 }
