@@ -220,8 +220,8 @@ public class GameScreen implements Screen {
         private void updateRunning(float delta) {
             stage.act(delta);
             batch.begin();
-            marcador.setText(AssetManager.font, "Puntuacion : " + puntuacion++);
-            AssetManager.fontPuntuacio.draw(batch, marcador, 1, 2);
+            marcador.setText(AssetManager.fontPuntuacio, "Puntuacion : " + puntuacion++);
+            AssetManager.fontPuntuacio.draw(batch, marcador, 1, Settings.GAME_HEIGHT*2-10);
 
             if (scrollHandler.collides(spacecraft)) {
                 // Si hi ha hagut col·lisió: Reproduïm l'explosió i posem l'estat a GameOver

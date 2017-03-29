@@ -99,8 +99,8 @@ public class AssetManager {
         FileHandle fontFile = Gdx.files.internal("fonts/space.fnt");
         font = new BitmapFont(fontFile, true);
         font.getData().setScale(0.4f);
-        fontPuntuacio = new BitmapFont(fontFile, true);
-        fontPuntuacio.getData().setScale(0.2f);
+        fontPuntuacio = new BitmapFont(fontFile, false);
+        fontPuntuacio.getData().setScale(0.4f);
     }
 
     public static void dispose() {
